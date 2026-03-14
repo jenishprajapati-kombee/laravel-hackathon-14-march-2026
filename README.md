@@ -64,7 +64,6 @@ open http://localhost:8000
 | **Prometheus** | http://localhost:9090 |
 | **Loki** | http://localhost:3100 |
 | **Tempo** | http://localhost:3200 |
-| **OTel Collector** | http://localhost:8888 |
 
 ---
 
