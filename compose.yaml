@@ -119,6 +119,21 @@ services:
             - prometheus
             - loki
             - tempo
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        restart: unless-stopped
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_USER: sail
+            PMA_PASSWORD: password
+            MYSQL_ROOT_PASSWORD: password
+        ports:
+            - '${PHPMYADMIN_PORT:-8080}:80'
+        networks:
+            - sail
+        depends_on:
+            - mysql
 networks:
     sail:
         driver: bridge
