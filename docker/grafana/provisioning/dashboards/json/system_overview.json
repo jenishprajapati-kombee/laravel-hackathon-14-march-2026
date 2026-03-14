@@ -77,30 +77,45 @@
       "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } } }
     },
     {
-      "title": "Slowest Endpoints (Last Request Duration)",
-      "type": "table",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "title": "Last Request Duration (ms) — Endpoint Latency",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 9 },
       "targets": [
         {
-          "expr": "topk(10, app_http_request_duration_last{job=\"laravel-app\"} * 1000)",
-          "legendFormat": "{{instance}}",
-          "instant": true,
+          "expr": "app_http_request_duration_last * 1000",
+          "legendFormat": "Last Request (ms)",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "ms" } }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name", "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "ms", "thresholds": { "mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 500}, {"color": "red", "value": 2000}] } } }
     },
     {
-      "title": "Total Request Volume",
+      "title": "Last DB Query Duration (ms)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 9 },
+      "targets": [
+        {
+          "expr": "app_db_query_duration_last * 1000",
+          "legendFormat": "Last DB Query (ms)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name", "colorMode": "background" },
+      "fieldConfig": { "defaults": { "unit": "ms", "thresholds": { "mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 100}, {"color": "red", "value": 500}] } } }
+    },
+    {
+      "title": "Requests (Last 15 min)",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 9 },
       "targets": [
         {
-          "expr": "app_http_requests_total",
+          "expr": "increase(app_http_requests_total[15m])",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color": "blue", "value": null}] } } }
     },
     {
       "title": "Total Error Count",
@@ -128,16 +143,17 @@
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } }
     },
     {
-      "title": "Total DB Queries",
+      "title": "DB Queries (Last 15 min)",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 13 },
       "targets": [
         {
-          "expr": "app_db_queries_total",
+          "expr": "increase(app_db_queries_total[15m])",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } }
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color": "purple", "value": null}] } } }
     },
     {
       "collapsed": false,
@@ -226,11 +242,12 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 43 },
       "targets": [
         {
-          "expr": "{service_name=\"laravel-hackathon\", severity_text=\"error\"}",
+          "expr": "{service_name=\"laravel-hackathon\"} | severity_text =~ \"(?i)(error|critical|fatal|warn)\"",
+          "legendFormat": "",
           "datasource": { "type": "loki", "uid": "loki" }
         }
       ],
-      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true }
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true, "wrapLogMessage": true }
     },
     {
       "title": "Login Failure Logs",
