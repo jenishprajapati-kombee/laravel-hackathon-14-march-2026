@@ -45,42 +45,56 @@ class Brands extends Component
         $this->brand_id = '';
     }
 
-    public function store()
+    public function store(\App\Services\BrandService $brandService)
     {
-        $this->validate([
-            'name' => 'required|max:191',
-            'status' => 'required|in:Y,N',
-        ]);
+        \Keepsuit\LaravelOpenTelemetry\Facades\OpenTelemetry::tracer()->newSpan('Livewire: Store Brand')->measure(function () use ($brandService) {
+            $this->validate([
+                'name' => 'required|max:191',
+                'status' => 'required|in:Y,N',
+            ]);
 
-        Brand::updateOrCreate(['id' => $this->brand_id], [
-            'name' => $this->name,
-            'description' => $this->description,
-            'status' => $this->status
-        ]);
+            if ($this->brand_id) {
+                $brandService->updateBrand($this->brand_id, [
+                    'name' => $this->name,
+                    'description' => $this->description,
+                    'status' => $this->status
+                ]);
+            } else {
+                $brandService->createBrand([
+                    'name' => $this->name,
+                    'description' => $this->description,
+                    'status' => $this->status
+                ]);
+            }
 
-        session()->flash('message', $this->brand_id ? 'Brand Updated Successfully.' : 'Brand Created Successfully.');
-        $this->closeModal();
-        
-        $this->dispatch('pg:eventRefresh-BrandTable');
+            session()->flash('message', $this->brand_id ? 'Brand Updated Successfully.' : 'Brand Created Successfully.');
+            $this->closeModal();
+            
+            $this->dispatch('pg:eventRefresh-BrandTable');
+        });
     }
 
     #[\Livewire\Attributes\On('edit-brand')]
     public function edit($brandId)
     {
-        $brand = Brand::findOrFail($brandId);
-        $this->brand_id = $brandId;
-        $this->name = $brand->name;
-        $this->description = $brand->description;
-        $this->status = $brand->status;
+        \Keepsuit\LaravelOpenTelemetry\Facades\OpenTelemetry::tracer()->newSpan('Livewire: Edit Brand Modal')->measure(function () use ($brandId) {
+            $brand = \App\Models\Brand::findOrFail($brandId);
+            $this->brand_id = $brandId;
+            $this->name = $brand->name;
+            $this->description = $brand->description;
+            $this->status = $brand->status;
 
-        $this->openModal();
+            $this->openModal();
+        });
     }
 
     #[\Livewire\Attributes\On('delete-brand')]
-    public function delete($brandId)
+    public function delete($brandId, \App\Services\BrandService $brandService)
     {
-        Brand::find($brandId)->delete();
-        session()->flash('message', 'Brand Deleted Successfully.');
-        $this->dispatch('pg:eventRefresh-BrandTable'); 
+        \Keepsuit\LaravelOpenTelemetry\Facades\OpenTelemetry::tracer()->newSpan('Livewire: Delete Brand')->measure(function () use ($brandId, $brandService) {
+            $brandService->deleteBrand($brandId);
+            session()->flash('message', 'Brand Deleted Successfully.');
+            $this->dispatch('pg:eventRefresh-BrandTable'); 
+        });
     }
 }

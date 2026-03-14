@@ -20,6 +20,7 @@ class AnomalyMiddleware
             return $next($request);
         }
 
+        /*
         // 10% chance of a slow request
         if (rand(1, 100) <= 10) {
             usleep(rand(1000, 3000) * 1000); // 1-3 seconds
@@ -29,6 +30,7 @@ class AnomalyMiddleware
         if (rand(1, 100) <= 2) {
             abort(500, 'Simulated Chaos: This is an intentional anomaly for observability testing.');
         }
+        */
 
         return $next($request);
     }
