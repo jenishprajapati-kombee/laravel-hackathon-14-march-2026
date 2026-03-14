@@ -173,7 +173,7 @@ Get-Content load-test.js | docker run --rm -i --network=laravel-hackathon-14-mar
 ## Submission Checklist
 
 - [x] Working Laravel application (Login + 5 CRUD entities)
-- [x] Docker Compose: full stack (App, MySQL, Prometheus, Loki, Tempo, Grafana, OTel)
+- [x] Docker Compose: full stack (App, MySQL, Prometheus, Loki, Tempo, Grafana)
 - [x] Prometheus metrics with custom middleware
 - [x] Loki logs via OpenTelemetry (structured login/validation/error events)
 - [x] Tempo traces with custom spans (BrandService, Livewire layers)
