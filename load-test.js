@@ -14,7 +14,7 @@ import { sleep, check, group } from 'k6';
  *  Phase 4 – Cool down (ramp down, 30s)
  */
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000';
+const BASE_URL = __ENV.BASE_URL || 'http://laravel.test:80';
 
 export const options = {
   stages: [
