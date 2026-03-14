@@ -19,6 +19,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::get('/trigger-error', function () {
+    \Illuminate\Support\Facades\Log::channel('otlp')->error('Diagnostic Error: Manual anomaly injection for testing dashboards');
+    return 'Error triggered and logged to OTLP';
+});
+
 require __DIR__.'/auth.php';
 
 Route::get('/roles', Roles::class)->middleware(['auth'])->name('roles');

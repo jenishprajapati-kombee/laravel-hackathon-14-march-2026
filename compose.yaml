@@ -59,7 +59,7 @@ services:
         networks:
             - sail
     loki:
-        image: grafana/loki:latest
+        image: grafana/loki:3.0.0
         restart: unless-stopped
         volumes:
             - './docker/loki/loki-config.yml:/etc/loki/local-config.yaml'
@@ -69,7 +69,7 @@ services:
         networks:
             - sail
     tempo:
-        image: grafana/tempo:2.2.0
+        image: grafana/tempo:2.4.1
         restart: unless-stopped
         command: [ "-config.file=/etc/tempo.yaml" ]
         volumes:
@@ -82,7 +82,7 @@ services:
         networks:
             - sail
     otel-collector:
-        image: otel/opentelemetry-collector-contrib:latest
+        image: otel/opentelemetry-collector-contrib:0.100.0
         restart: unless-stopped
         command: [ "--config=/etc/otel-collector-config.yaml" ]
         volumes:

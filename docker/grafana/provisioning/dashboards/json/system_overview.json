@@ -84,7 +84,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "count_over_time({service_name=\"laravel-hackathon\"} [1m]) by (level)",
+          "expr": "sum by (severity_text) (count_over_time({service_name=\"laravel-hackathon\"} [1m]))",
           "datasource": { "type": "loki", "uid": "loki" }
         }
       ]
@@ -95,7 +95,7 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
       "targets": [
         {
-          "expr": "{service_name=\"laravel-hackathon\"} |= \"error\"",
+          "expr": "{service_name=\"laravel-hackathon\", severity_text=~\"(?i)error|warn|critical|fatal\"}",
           "datasource": { "type": "loki", "uid": "loki" }
         }
       ]
