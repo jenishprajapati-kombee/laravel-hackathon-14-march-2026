@@ -20,6 +20,9 @@ class PrometheusMiddleware
         $status = $response->getStatusCode();
 
         // Increment HTTP requests total
+        if (!Cache::has('prometheus:http_requests_total')) {
+            Cache::forever('prometheus:http_requests_total', 0);
+        }
         Cache::increment('prometheus:http_requests_total');
         
         // Track Active Users
@@ -38,6 +41,9 @@ class PrometheusMiddleware
         ]);
 
         if ($status >= 400) {
+            if (!Cache::has('prometheus:http_errors_total')) {
+                Cache::forever('prometheus:http_errors_total', 0);
+            }
             Cache::increment('prometheus:http_errors_total');
             Logger::error("HTTP Error $status on {$request->path()}");
         }

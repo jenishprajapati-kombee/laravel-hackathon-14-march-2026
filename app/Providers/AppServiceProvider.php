@@ -72,6 +72,9 @@ class AppServiceProvider extends ServiceProvider
             if ($isRecording) return;
             $isRecording = true;
             try {
+                if (!\Illuminate\Support\Facades\Cache::has('prometheus:db_queries_total')) {
+                    \Illuminate\Support\Facades\Cache::forever('prometheus:db_queries_total', 0);
+                }
                 \Illuminate\Support\Facades\Cache::increment('prometheus:db_queries_total');
                 \Illuminate\Support\Facades\Cache::put('prometheus:db_query_duration_last', $query->time / 1000);
             } finally {

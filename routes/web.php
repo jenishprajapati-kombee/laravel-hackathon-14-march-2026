@@ -21,7 +21,7 @@ Route::view('profile', 'profile')
 
 Route::get('/trigger-error', function () {
     \Illuminate\Support\Facades\Log::channel('otlp')->error('Diagnostic Error: Manual anomaly injection for testing dashboards');
-    return 'Error triggered and logged to OTLP';
+    abort(500, 'Error triggered and logged to OTLP');
 });
 
 require __DIR__.'/auth.php';
