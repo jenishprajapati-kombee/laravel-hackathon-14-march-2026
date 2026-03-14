@@ -1,59 +1,210 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🚀 Kombee Hackathon 2.0 — Laravel Observability Stack
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Team:** Kombee Frontend & Backend Web Team  
+> **Stack:** Laravel 12 · MySQL · Prometheus · Loki · Tempo · Grafana · OpenTelemetry · k6  
+> **Deadline:** 14th March 2026, 8:00 PM
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Table of Contents
+1. [Application Overview](#application-overview)
+2. [Quick Start](#quick-start)
+3. [Observability Stack](#observability-stack)
+4. [Grafana Dashboards](#grafana-dashboards)
+5. [Anomaly Injection](#anomaly-injection)
+6. [Load Testing](#load-testing)
+7. [Submission Checklist](#submission-checklist)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Application Overview
 
-## Learning Laravel
+A full-featured Laravel application with:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Feature | Details |
+|---|---|
+| **Auth** | Registration, Login, Rate-limited lockout |
+| **CRUD Entities** | Brands, Products, Countries, States, Cities, Roles |
+| **UI Components** | Tables (PowerGrid), Modals, Forms, Dropdowns, Alerts, Error messages |
+| **Observability** | Prometheus metrics, Loki logs, Tempo traces via OpenTelemetry |
+| **Anomaly Control** | Live panel to inject delays, errors, N+1 DB queries |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Quick Start
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd laravel-hackathon-14-march-2026
 
-### Premium Partners
+# 2. Copy environment file
+cp .env.example .env
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 3. Start all Docker services
+docker compose up -d
 
-## Contributing
+# 4. Run migrations & seeders
+docker compose exec laravel.test php artisan migrate --seed
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 5. Open the application
+open http://localhost:8000
 
-## Code of Conduct
+# Default credentials:
+# Email:    admin@example.com
+# Password: password
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Service URLs
 
-## Security Vulnerabilities
+| Service | URL |
+|---|---|
+| **Application** | http://localhost:8000 |
+| **Grafana** | http://localhost:3001 |
+| **Prometheus** | http://localhost:9090 |
+| **Loki** | http://localhost:3100 |
+| **Tempo** | http://localhost:3200 |
+| **OTel Collector** | http://localhost:8888 |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Observability Stack
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+Laravel App
+    │
+    ├── Prometheus Metrics ─────────────────→ Prometheus (port 9090)
+    │   (HTTP requests, errors, DB queries,              │
+    │    latency, active users)                          │
+    │                                                    ▼
+    └── OpenTelemetry Exporter → OTel Collector → Grafana (port 3001)
+            │                         │                  ▲
+            ├── Traces ────────────→ Tempo (port 3200)   │
+            │                                            │
+            └── Logs ─────────────→ Loki (port 3100) ───┘
+```
+
+### Instrumented Layers
+
+- **HTTP Middleware** — Every request logged with status, duration, IP
+- **DB Listener** — Every query duration tracked
+- **OpenTelemetry Spans** — Custom spans in BrandService, Livewire components
+- **Login Events** — `login.failed`, `login.success`, `login.locked`
+- **Validation Failures** — `validation.failed` events
+
+---
+
+## Grafana Dashboards
+
+Dashboard: **System Observability Overview** → http://localhost:3001
+
+### 🟢 Section 1 — Application Health
+| Panel | Query | Purpose |
+|---|---|---|
+| Requests Per Minute | `sum(rate(app_http_requests_total[1m])) * 60` | Traffic volume |
+| Error Rate (%) | `sum(rate(app_http_errors_total...` | Health indicator |
+| 95th Percentile Latency | `app_http_request_duration_last * 1000` | User experience |
+| Active Users Over Time | `app_active_users` | Session-based tracking |
+| Slowest Endpoints | `topk(10, ...)` | Bottleneck discovery |
+
+### 🗄️ Section 2 — Database Performance
+| Panel | Purpose |
+|---|---|
+| DB Query Duration | Actual last query time in ms |
+| DB Query Rate | Queries per minute |
+| DB vs App Latency | Compares HTTP total vs DB time to find bottleneck origin |
+
+### 📋 Section 3 — Logs (Loki)
+| Panel | LogQL Query |
+|---|---|
+| All Logs | `{service_name="laravel-hackathon"}` |
+| Error Logs | `{service_name="laravel-hackathon", severity_text="error"}` |
+| Login Failures | `{service_name="laravel-hackathon"} \|= "login.failed"` |
+| Validation Failures | `{service_name="laravel-hackathon"} \|= "validation.failed"` |
+| Log Severity Count | `sum by (severity_text) (count_over_time(...[1m]))` |
+
+---
+
+## Anomaly Injection
+
+Visit: **http://localhost:8000/anomalies** (requires login)
+
+| Control | Effect | Observable In |
+|---|---|---|
+| **Artificial Delay (ms)** | Adds `usleep()` to every request | Latency panel spikes |
+| **Error Rate (%)** | Randomly throws exceptions | Error rate % rises, error logs appear in Loki |
+| **Inefficient DB** | Runs 50 extra `User::count()` queries | DB Query Rate spikes dramatically |
+
+**Reset all anomalies** — Click "Reset All" button to restore normal behaviour.
+
+---
+
+## Load Testing
+
+### Run with k6 (Docker)
+
+```powershell
+# PowerShell
+Get-Content load-test.js | docker run --rm -i --network=laravel-hackathon-14-march-2026_sail grafana/k6 run -
+```
+
+### Test Phases
+
+| Phase | Duration | VUs | Purpose |
+|---|---|---|---|
+| Warm-up | 30s | 10 | Establish baseline |
+| Sustained | 2m | 50 | Normal production load |
+| **Spike** | 30s | **200** | Stress test, find limits |
+| Cool-down | 30s | 0 | Observe recovery |
+
+### Results Summary (Actual Run)
+
+| Metric | Value |
+|---|---|
+| Total Requests | 848 |
+| Error Rate | 1.29% |
+| Median Latency | 8.93s (spike phase) |
+| p95 Latency | 39.29s (spike phase) |
+| **Bottleneck** | `/brands` endpoint (DB query heavy) |
+
+**Finding:** At 200 concurrent users, the `/brands` endpoint becomes the first to fail due to DB query saturation, proving the database is the performance bottleneck.
+
+---
+
+## Submission Checklist
+
+- [x] Working Laravel application (Login + 5 CRUD entities)
+- [x] Docker Compose: full stack (App, MySQL, Prometheus, Loki, Tempo, Grafana, OTel)
+- [x] Prometheus metrics with custom middleware
+- [x] Loki logs via OpenTelemetry (structured login/validation/error events)
+- [x] Tempo traces with custom spans (BrandService, Livewire layers)
+- [x] Grafana dashboard JSON (`docker/grafana/provisioning/dashboards/json/system_overview.json`)
+- [x] Anomaly injection control panel
+- [x] k6 load test script (`load-test.js`)
+- [ ] Screen recording video (see VIDEO_SCRIPT.md)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Docker Network                    │
+│                                                      │
+│  ┌──────────┐    ┌──────────────┐    ┌───────────┐  │
+│  │  Laravel │───→│ OTel Collect │───→│   Tempo   │  │
+│  │  :80     │    │ (Traces+Logs)│    │  :3200    │  │
+│  └──────────┘    └──────┬───────┘    └───────────┘  │
+│       │                 │                            │
+│       │ /prometheus     ▼                            │
+│       │          ┌──────────┐                        │
+│       │          │   Loki   │                        │
+│       ▼          │  :3100   │                        │
+│  ┌──────────┐    └──────────┘                        │
+│  │Prometheus│                                        │
+│  │  :9090   │    ┌──────────────────────────────┐   │
+│  └──────────┘    │          Grafana :3000        │   │
+│       └─────────→│  (Prometheus + Loki + Tempo)  │   │
+│                  └──────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+```
