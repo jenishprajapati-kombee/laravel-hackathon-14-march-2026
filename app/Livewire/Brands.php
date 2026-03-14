@@ -48,10 +48,20 @@ class Brands extends Component
     public function store(\App\Services\BrandService $brandService)
     {
         \Keepsuit\LaravelOpenTelemetry\Facades\OpenTelemetry::tracer()->newSpan('Livewire: Store Brand')->measure(function () use ($brandService) {
-            $this->validate([
-                'name' => 'required|max:191',
-                'status' => 'required|in:Y,N',
-            ]);
+            try {
+                $this->validate([
+                    'name' => 'required|max:191',
+                    'status' => 'required|in:Y,N',
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // 🔍 Structured log for Loki — searchable with: |= "validation.failed"
+                \Keepsuit\LaravelOpenTelemetry\Facades\Logger::warning('validation.failed', [
+                    'form'   => 'brand',
+                    'action' => $this->brand_id ? 'update' : 'create',
+                    'errors' => $e->errors(),
+                ]);
+                throw $e;
+            }
 
             if ($this->brand_id) {
                 $brandService->updateBrand($this->brand_id, [

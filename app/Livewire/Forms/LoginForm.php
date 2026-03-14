@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Keepsuit\LaravelOpenTelemetry\Facades\Logger;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
@@ -28,10 +29,21 @@ class LoginForm extends Form
      */
     public function authenticate(): void
     {
-        $this->ensureIsNotRateLimited();
+        try {
+            $this->ensureIsNotRateLimited();
+        } catch (ValidationException $e) {
+            throw $e;
+        }
 
         if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
             RateLimiter::hit($this->throttleKey());
+
+            // 🔍 Structured log for Loki — searchable with: |= "login.failed"
+            Logger::warning('login.failed', [
+                'email'  => $this->email,
+                'ip'     => request()->ip(),
+                'reason' => 'invalid_credentials',
+            ]);
 
             throw ValidationException::withMessages([
                 'form.email' => trans('auth.failed'),
@@ -39,6 +51,12 @@ class LoginForm extends Form
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // Log successful login
+        Logger::info('login.success', [
+            'email' => $this->email,
+            'ip'    => request()->ip(),
+        ]);
     }
 
     /**
@@ -53,6 +71,13 @@ class LoginForm extends Form
         event(new Lockout(request()));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        // 🔍 Structured log for Loki — searchable with: |= "login.locked"
+        Logger::error('login.locked', [
+            'email'               => $this->email,
+            'ip'                  => request()->ip(),
+            'retry_after_seconds' => $seconds,
+        ]);
 
         throw ValidationException::withMessages([
             'form.email' => trans('auth.throttle', [

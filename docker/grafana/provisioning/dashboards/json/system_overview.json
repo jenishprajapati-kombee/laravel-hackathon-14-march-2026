@@ -3,10 +3,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Graphics --"
-        },
+        "datasource": { "type": "grafana", "uid": "-- Graphics --" },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -22,94 +19,253 @@
   "liveNow": false,
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "title": "🟢 Application Health",
+      "type": "row"
+    },
+    {
       "title": "Requests Per Minute",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 1 },
       "targets": [
         {
           "expr": "sum(rate(app_http_requests_total[1m])) * 60",
+          "legendFormat": "RPM",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
-      ]
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqpm" } }
     },
     {
       "title": "Error Rate (%)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 1 },
       "targets": [
         {
           "expr": "sum(rate(app_http_errors_total[1m])) / sum(rate(app_http_requests_total[1m])) * 100",
+          "legendFormat": "Error %",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
-      ]
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "color": { "mode": "fixed", "fixedColor": "red" }, "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "red", "value": 5}] } } }
     },
     {
       "title": "95th Percentile Latency",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 1 },
       "targets": [
         {
           "expr": "app_http_request_duration_last * 1000",
+          "legendFormat": "Response Time",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 500}, {"color": "red", "value": 2000}] } } }
+    },
+    {
+      "title": "Active Users (Approx)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 1 },
+      "targets": [
+        {
+          "expr": "app_active_users",
+          "legendFormat": "Active Users",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } } }
+    },
+    {
+      "title": "Slowest Endpoints (Last Request Duration)",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "expr": "topk(10, app_http_request_duration_last{job=\"laravel-app\"} * 1000)",
+          "legendFormat": "{{instance}}",
+          "instant": true,
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
       "fieldConfig": { "defaults": { "unit": "ms" } }
     },
     {
-      "title": "Active Users (Approx)",
+      "title": "Total Request Volume",
       "type": "stat",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 9 },
+      "targets": [
+        {
+          "expr": "app_http_requests_total",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } }
+    },
+    {
+      "title": "Total Error Count",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 9 },
+      "targets": [
+        {
+          "expr": "app_http_errors_total",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}] } } }
+    },
+    {
+      "title": "Active Users (Current)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 13 },
       "targets": [
         {
           "expr": "app_active_users",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
-      ]
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } }
     },
     {
-      "title": "DB Query Duration",
+      "title": "Total DB Queries",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 13 },
+      "targets": [
+        {
+          "expr": "app_db_queries_total",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+      "title": "🗄️ Database Performance",
+      "type": "row"
+    },
+    {
+      "title": "DB Query Duration Over Time",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
       "targets": [
         {
           "expr": "app_db_query_duration_last * 1000",
+          "legendFormat": "Query Duration",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 100}, {"color": "red", "value": 500}] } } }
+    },
+    {
+      "title": "DB Query Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "targets": [
+        {
+          "expr": "rate(app_db_queries_total[1m]) * 60",
+          "legendFormat": "Queries/min",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "DB vs App Latency Comparison",
+      "description": "If DB Duration is proportionally high vs HTTP duration, DB is the bottleneck.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 26 },
+      "targets": [
+        {
+          "expr": "app_http_request_duration_last * 1000",
+          "legendFormat": "HTTP Request Duration (ms)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "expr": "app_db_query_duration_last * 1000",
+          "legendFormat": "DB Query Duration (ms)",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ],
       "fieldConfig": { "defaults": { "unit": "ms" } }
     },
     {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
+      "title": "📋 Logs Dashboard",
+      "type": "row"
+    },
+    {
       "title": "Log Counts by Severity",
       "type": "barchart",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 35 },
       "targets": [
         {
           "expr": "sum by (severity_text) (count_over_time({service_name=\"laravel-hackathon\"} [1m]))",
+          "legendFormat": "{{severity_text}}",
           "datasource": { "type": "loki", "uid": "loki" }
         }
       ]
     },
     {
-      "title": "Live Error Logs",
+      "title": "All Application Logs",
       "type": "logs",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 35 },
       "targets": [
         {
-          "expr": "{service_name=\"laravel-hackathon\", severity_text=~\"(?i)error|warn|critical|fatal\"}",
+          "expr": "{service_name=\"laravel-hackathon\"}",
           "datasource": { "type": "loki", "uid": "loki" }
         }
-      ]
+      ],
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true }
+    },
+    {
+      "title": "Live Error Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 43 },
+      "targets": [
+        {
+          "expr": "{service_name=\"laravel-hackathon\", severity_text=\"error\"}",
+          "datasource": { "type": "loki", "uid": "loki" }
+        }
+      ],
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true }
+    },
+    {
+      "title": "Login Failure Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 51 },
+      "targets": [
+        {
+          "expr": "{service_name=\"laravel-hackathon\"} |= \"login.failed\"",
+          "datasource": { "type": "loki", "uid": "loki" }
+        }
+      ],
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true }
+    },
+    {
+      "title": "Validation Failure Logs",
+      "type": "logs",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 51 },
+      "targets": [
+        {
+          "expr": "{service_name=\"laravel-hackathon\"} |= \"validation.failed\"",
+          "datasource": { "type": "loki", "uid": "loki" }
+        }
+      ],
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "showTime": true }
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": ["observability", "hackathon"],
   "templating": { "list": [] },
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
   "title": "System Observability Overview",
   "uid": "system-overview",
-  "version": 1
+  "version": 2
 }
