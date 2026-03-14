@@ -123,6 +123,12 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        'otlp' => [
+            'driver' => 'monolog',
+            'handler' => \Keepsuit\LaravelOpenTelemetry\Support\OpenTelemetryMonologHandler::class,
+            'level' => 'debug',
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

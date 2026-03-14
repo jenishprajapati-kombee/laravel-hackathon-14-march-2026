@@ -48,9 +48,86 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+    prometheus:
+        image: prom/prometheus:latest
+        restart: unless-stopped
+        volumes:
+            - './docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+            - 'sail-prometheus:/prometheus'
+        ports:
+            - '${PROMETHEUS_PORT:-9090}:9090'
+        networks:
+            - sail
+    loki:
+        image: grafana/loki:latest
+        restart: unless-stopped
+        volumes:
+            - './docker/loki/loki-config.yml:/etc/loki/local-config.yaml'
+        command: -config.file=/etc/loki/local-config.yaml
+        ports:
+            - '${LOKI_PORT:-3100}:3100'
+        networks:
+            - sail
+    tempo:
+        image: grafana/tempo:2.2.0
+        restart: unless-stopped
+        command: [ "-config.file=/etc/tempo.yaml" ]
+        volumes:
+            - './docker/tempo/tempo-config.yml:/etc/tempo.yaml'
+            - 'sail-tempo:/tmp/tempo'
+        ports:
+            - '3200:3200' # tempo
+            - '4317:4317' # otlp grpc
+            - '4318:4318' # otlp http
+        networks:
+            - sail
+    otel-collector:
+        image: otel/opentelemetry-collector-contrib:latest
+        restart: unless-stopped
+        command: [ "--config=/etc/otel-collector-config.yaml" ]
+        volumes:
+            - './docker/otel-collector/otel-config.yml:/etc/otel-collector-config.yaml'
+        ports:
+            - "1888:1888"   # pprof extension
+            - "8888:8888"   # Prometheus metrics exposed by the collector
+            - "8889:8889"   # Prometheus exporter metrics
+            - "13133:13133" # health_check extension
+            - "4317"        # OTLP gRPC receiver
+            - "4318"        # OTLP http receiver
+            - "55679:55679" # zpages extension
+        networks:
+            - sail
+        depends_on:
+            - prometheus
+            - loki
+            - tempo
+    grafana:
+        image: grafana/grafana:latest
+        restart: unless-stopped
+        environment:
+            - GF_AUTH_ANONYMOUS_ENABLED=true
+            - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+            - GF_AUTH_DISABLE_LOGIN_FORM=true
+        volumes:
+            - 'sail-grafana:/var/lib/grafana'
+            - './docker/grafana/provisioning:/etc/grafana/provisioning'
+        ports:
+            - '${GRAFANA_PORT:-3001}:3000'
+        networks:
+            - sail
+        depends_on:
+            - prometheus
+            - loki
+            - tempo
 networks:
     sail:
         driver: bridge
 volumes:
     sail-mysql:
+        driver: local
+    sail-prometheus:
+        driver: local
+    sail-grafana:
+        driver: local
+    sail-tempo:
         driver: local
